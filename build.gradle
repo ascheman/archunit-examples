@@ -1,0 +1,19 @@
+dependencies {
+    // NOTE: The pure javaee-api dependencies are crippled,
+    //       so to run any test we need to choose a full implementation provider
+    compile 'org.apache.geronimo.specs:geronimo-ejb_3.1_spec:1.0'
+    compile 'org.apache.geronimo.specs:geronimo-jpa_2.0_spec:1.0'
+
+    testCompile project(path: ':archunit')
+    testCompile project(path: ':archunit-junit')
+}
+
+addTestJarTo this
+
+test {
+    if (!project.hasProperty('example')) {
+        useJUnit {
+            excludeCategories 'com.tngtech.archunit.exampletest.Example'
+        }
+    }
+}
