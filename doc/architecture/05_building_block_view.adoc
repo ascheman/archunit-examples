@@ -1,0 +1,47 @@
+[[section-building-block-view]]
+== Building Block View
+
+This section describes the PlantUML Plugin modules which you will also find in the
+Java package structure.
+
+=== Level 1
+
+The following UML package diagram shows the main building blocks of the system and their interdependencies:
+
+["plantuml", "MainBuildingBlocks", "png"]
+-----
+
+package com.tngtech.archunit.example.controller {}
+package com.tngtech.archunit.example.service {}
+package com.tngtech.archunit.example.persistence {}
+
+com.tngtech.archunit.example.controller ---> com.tngtech.archunit.example.service
+com.tngtech.archunit.example.service ---> com.tngtech.archunit.example.persistence
+
+-----
+
+.Description of com.tngtech.archunit.example
+[options="header"]
+|====
+| Package       | Purpose
+| controller    | Presentation layer
+| service       | Business logic
+| persistence   | Persistence layer
+|====
+
+
+==== Known Technical Debt
+
+*Unwanted Dependencies*
+
+During the lifetime many features were added. For some of them, a building block needs information stored in
+a different building block or has to call functionality of another building block - but these new connections
+lead to circular dependencies. To keep the System maintainable, the architecture must be improved:
+resolve dependency circles, move responsibilities etc. Open tasks are:
+
+.Unwantend Module Dependencies
+[options="header"]
+|===
+| From                          | To                          | What should be done
+|===
+
