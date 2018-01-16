@@ -1,4 +1,5 @@
 [[default]]
-[role=group,includesGroups="structure:Default"]
+[role=group,includesGroups="structure:Default,daorules:Default"]
 - <<structure:Default>>
+- <<daorules:Default>>
 

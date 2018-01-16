@@ -1,0 +1,32 @@
+[[daorules:Default]]
+[role=group,includesConstraints="daos:WrongPackage,entities:WrongPackage"]
+- <<daos:WrongPackage>>
+- <<entities:WrongPackage>>
+
+[[daos:WrongPackage]]
+.Finds `DAO` classes which reside in packages which are not named `dao`.
+[source,cypher,role=constraint,severity=major]
+----
+MATCH
+    (p:Java:Package) --> (c:Java:Class)
+WHERE
+    c.fqn =~ ".*Dao"
+    AND NOT p.fqn =~ ".*\\.dao\\..*"
+RETURN
+    p.fqn + " must not contain DAO class " + c.fqn AS DaoInWrongPackage;
+----
+
+[[entities:WrongPackage]]
+.Finds `@Entity` classes which reside in packages which are not named `domain`.
+[source,cypher,role=constraint,severity=major]
+----
+MATCH
+    (p:Java:Package) -->
+      (c:Java:Class)
+        -[:ANNOTATED_BY]-> ()
+          -[:OF_TYPE]-> (e {fqn: "javax.persistence.Entity"})
+WHERE
+    NOT p.fqn =~ ".*\\.domain.*"
+RETURN
+    p.fqn + " must not contain Entity class " + c.fqn AS EntityInWrongPackage;
+----

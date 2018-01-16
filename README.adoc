@@ -20,6 +20,7 @@ TBD
 The following use cases are compared in detail:
 
 * <<sec:component-dependencies>>
+* <<sec:class-in-wrong-package>>
 
 [[sec:component-dependencies]]
 === UC Component Dependencies
@@ -153,3 +154,36 @@ it is tagged as `severity=critical` it finally breaks the build.
 ----
 include::jqassistant/structure.adoc[lines=58]
 ----
+
+[[sec:class-in-wrong-package]]
+=== UC Class in wrong package
+
+Software architectures often require that certain classes belong to particular packages, e.g.,
+
+* `DAO` (Data Access Object) classes should be part of the `.dao` package hierarchy, or
+* Entity classes (defined by the JPA `@Entity` annotation) should be defined in `.domain` packages.
+
+==== AU class in package check
+
+AU provides several checks for the persistence component in
+link:src/test/java/com/tngtech/archunit/exampletest/DaoRulesTest.java[].
+
+[[code:au-class-in-package-check]]
+[source, java]
+.AU checks if all DAO classes reside in a `dao` package
+----
+include::src/test/java/com/tngtech/archunit/exampletest/DaoRulesTest.java[lines=21..24]
+----
+
+[[code:au-annotated-class-in-package-check]]
+[source, java]
+.AU checks if all `@Entity` annotated classes reside in a `domain` package
+----
+include::src/test/java/com/tngtech/archunit/exampletest/DaoRulesTest.java[lines=27..30]
+----
+
+==== jQA class in package check
+
+The corresponding tests for jQA are implemented in link:jqassistant/daorules.adoc[].
+
+include::jqassistant/daorules.adoc[]
