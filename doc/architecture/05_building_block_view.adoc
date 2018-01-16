@@ -42,6 +42,7 @@ resolve dependency circles, move responsibilities etc. Open tasks are:
 .Unwantend Module Dependencies
 [options="header"]
 |===
-| From                          | To                          | What should be done
+| From                                   | To                                      | What should be done
+//| com.tngtech.archunit.example.service | com.tngtech.archunit.example.controller | Clean up on next sprint
 |===
 

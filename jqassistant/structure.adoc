@@ -8,11 +8,11 @@
 [source,cypher,role=concept,requiresConcepts="dependency:Package"]
 ----
 MATCH
-    (p:Java:Package)
+    (p:Java:Package) // // <1>
 WITH
-    SPLIT(p.fqn,".") AS splitted, p
+    SPLIT(p.fqn, ".") AS splitted, p // // <2>
 SET
-    p.level=SIZE(splitted)
+    p.level=SIZE(splitted) // // <3>
 RETURN
     splitted, SIZE(splitted);
 ----
@@ -58,12 +58,12 @@ RETURN
 [source,cypher,role=constraint,requiresConcepts="dependency:TransitivePackageDependencies, documented:TechnicalDebt",severity=critical]
 ----
 MATCH
-    (p1:PlantUml:Package)-[:MAY_DEPEND_ON]->(p2:PlantUml:Package),
-    (p3:Java:Package)-[:DEPENDS_ON]->(p4:Java:Package)
+    (p1:PlantUml:Package)-[:MAY_DEPEND_ON]->(p2:PlantUml:Package), // // <1>
+    (p3:Java:Package)-[:DEPENDS_ON]->(p4:Java:Package) // // <2>
 WHERE
-    p1.fqn = p4.fqn
-    AND p2.fqn = p3.fqn
-    AND NOT (p3)-[:TECHNICAL_DEBT]->(p4)
+    p1.fqn = p4.fqn // // <3>
+    AND p2.fqn = p3.fqn // // <4>
+    AND NOT (p3)-[:TECHNICAL_DEBT]->(p4) // // <5>
 RETURN
-    p3.fqn + "-->" + p4.fqn AS WrongDirection;
+    p3.fqn + "-->" + p4.fqn AS WrongDirection; // // <6>
 ----

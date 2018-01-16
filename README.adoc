@@ -1,0 +1,155 @@
+= Comparison ArchUnit vs. jQAssistant
+:icons: font
+:toc: left
+:toclevels: 6
+:author: Gerd Aschemann <gerd@aschemann.net>
+
+This project was started as a copy of the http://www.archunit.org[ArchUnit]
+https://github.com/TNG/ArchUnit/tree/master/archunit-example[Example] project (cf. link:README.md[]). It's purpose is
+the comparison of ArchJunit (AU for short) with software architecture testing by https://jqassistant.org[jQAssistant]
+(abbreviated by jQA). We make use of the rich set of AU samples and try to set up a similar test in jQA to show the
+strengths and weaknesses of both approaches different <<sec:usecases,use cases>>.
+
+== Introduction to AU and jQA and software architecture
+
+TBD
+
+[[sec:usescases]]
+== Use Cases
+
+The following use cases are compared in detail:
+
+* <<sec:component-dependencies>>
+
+[[sec:component-dependencies]]
+=== UC Component Dependencies
+
+Software architectures usually are composed of layers, or shells around a core, or components in general. In Java the
+components may be implemented as separate build units (JARs), or simply as packages - or as build units containing
+particular packages. It is very uncommon and inconvenient to have packages which are spread to different JARs (at least
+beyond a common root package). The architecture describes the desired component model and the allowed dependencies
+between the components. Technically there are only dependencies (imports) between classes, but this model can be reduced
+to dependencies between packages: A package A is dependant on package B if any class in package A or in a sub-package of
+A imports a class from B (or a sub-package of B).
+
+The sample architecture contains three layers
+
+* controller
+* service
+* persistence
+
+==== AU layer dependency checks
+
+AU tests the layering by the following Test cases
+
+[[code:au-layerdependencyrules]]
+[source]
+.AU layer dependency rules
+----
+include::src/test/java/com/tngtech/archunit/exampletest/LayerDependencyRulesTest.java[]
+----
+<1> Classes in the `service` package should not access `controller` classes
+<2> Classes in the `persistence` package must not access `service` classes
+<3> Classes in `service` should only be accessed by classes from `controller` classes and other `service` classes.
+
+==== jQA layer dependency checks
+
+===== jQA layer definitions by PlantUML
+
+The jQAssistant part is described in detail by (and taken in large parts from) two blog posts
+
+* http://techblog.kontext-e.de/executable-architecture-revisited/
+* http://techblog.kontext-e.de/managing-technical-debt-with-arc42-and-jqassistant-dependencies/
+
+The desired architectural model is given in a http://plantuml.org[PlantUML] section of
+link:src/doc/architecture/05_building_block_view.adoc[] describing the <<code:jqa-layerdependencyrules,jQA layer
+dependencies>>.
+
+[[code:jqa-layerdependencyrules]]
+[source, plantuml]
+.jQA layer dependencies by PlantUML
+----
+include::doc/architecture/05_building_block_view.adoc[lines=13..20]
+----
+
+===== jQA architecture test execution
+
+In this case there are no predefined rules in jQA which allow to test the architectural layering.
+The comparison of the model with the implementation is performed by several queries in
+link:jqassistant/structure.adoc[].
+
+The <<code:jqa-helper-package-depth>> assigns the package level (depth in the package containment tree) to each Java
+package.
+
+[[code:jqa-helper-package-depth]]
+[source, cypher]
+.jQA helper query to compute package depth
+----
+include::jqassistant/structure.adoc[lines=10..17]
+----
+<1> Find all Java packages
+<2> Compute package hierarchy as array `splitted`
+<3> Assign the level (depth) to each package as the length of the `splitted` array.
+
+The query in <<code:jqa-helper-add-transtive-package-dependency>> then adds a an additional `DEPENDS_ON` relationship to
+parents of a package P from other packages up to the same level of the source package.
+
+[[code:jqa-helper-add-transtive-package-dependency]]
+[source, cypher]
+.jQA helper query to make transitive package dependency explicit
+----
+include::jqassistant/structure.adoc[lines=24..32]
+----
+
+Finally the query in <<code:jqa-constraint-find-architecture-violations>> finds all packages which violate the
+architecture model.
+
+[[code:jqa-constraint-find-architecture-violations]]
+[source, cypher]
+.jQA constraint to find architecture violations
+----
+include::jqassistant/structure.adoc[lines=60..68]
+----
+<1> Matches all packages from PlantUML with allowed dependencies
+<2> matches all Java packages
+<3> and
+<4> finally find packages which have a `DEPENDS_ON` relationship from <2> but are not covered by the `MAY_DEPEND_ON`
+relationship from <1> (note that `p3` and `p4` seem to be switched as compared to `p1` and `p2` to do the trick).
+<5> Will exclude allowed exceptions (cf. <<sec:jqa-define-known-technical-debt>>)
+<6> Returns the matches (cf. <<sec:jqa-define-layering-constraint>>).
+
+[[sec:jqa-define-known-technical-debt]]
+====== jQA define known technical debt
+
+An additional query was used to <<code:jqa-define-known-technical-debt,allow the definition of technical debt>> from an
+AsciiDoctor table in link:doc/architecture/05_building_block_view.adoc[] (cf.
+<<code:jqa-known-technical-debt-asciidoctor>>, just remove the comment at the beginning of the line to make the test
+pass).
+
+[[code:jqa-define-known-technical-debt-cypher]]
+[source, cypher]
+.jQA add the definition of known technical debt
+----
+include::jqassistant/structure.adoc[lines=39..53]
+----
+
+[[code:jqa-known-technical-debt-asciidoctor]]
+[source, asciidoctor]
+.jQA add known technical debt
+----
+include::doc/architecture/05_building_block_view.adoc[lines=44..47]
+----
+
+[[sec:jqa-define-layering-constraint]]
+====== jQA define the layering constraint
+
+In link:jqassistant/structure.adoc[] the last rule was defined with `role=constraint`
+(<<code:jqa-define-layering-constraint>>). If the query returns a non-empty result it is considered a problem. Since
+it is tagged as `severity=critical` it finally breaks the build.
+
+[[code:jqa-define-layering-constraint]]
+[source, asciidoctor]
+.jQA define layering as constraint
+----
+include::jqassistant/structure.adoc[lines=58]
+----
